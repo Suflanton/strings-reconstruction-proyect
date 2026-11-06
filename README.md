@@ -1,59 +1,86 @@
 # String Reconstruction
 
-Academic project for the **Functional and Concurrent Programming** course at Universidad del Valle. It studies how to reconstruct a hidden string by querying an oracle that reports whether a candidate occurs as a contiguous substring.
+An academic project for the **Functional and Concurrent Programming** course at Universidad del Valle. The project studies how to recover a hidden string when the only available information comes from an oracle that answers substring-membership queries.
 
-## Problem
+## The problem
 
-Let `S` be an unknown string of length `N` over the alphabet `{a, c, g, t}`. The oracle receives a candidate `w` and returns `true` if `w` occurs in `S`, and `false` otherwise. The goal is to reconstruct `S` while minimizing oracle queries, which may be costly.
+Assume there is an unknown string `S` of known length `N`, built from the alphabet:
 
-The oracle interface is a Scala function:
+```text
+Σ = {a, c, g, t}
+```
+
+For any candidate string `w`, an oracle answers whether `w` occurs contiguously somewhere inside `S`. It does not reveal the location of the match. The task is to identify the entire hidden string while minimizing the number of oracle calls. This models settings such as DNA sequencing, where each query can represent an expensive measurement.
+
+The project models the oracle as a Scala function:
 
 ```scala
 type Oraculo = Seq[Char] => Boolean
 ```
 
-`crearOraculo(delay)(string)` creates a test oracle that waits for `delay` milliseconds per query and checks whether the candidate occurs in the string.
+`crearOraculo(delay)(secret)` creates a local test oracle. It waits for `delay` milliseconds for every query and then checks whether the candidate occurs in `secret`.
 
-## Algorithms
+The alphabet has four symbols, so there are `4^N` possible strings of length `N`. Trying them all is guaranteed to find the answer, but quickly becomes impractical. The central algorithmic idea is that every contiguous fragment of a string that occurs in `S` also occurs in `S`. A valid fragment can therefore be extended or combined with other valid fragments to build longer candidates.
+
+## Approaches explored
 
 The project implements five sequential strategies and parallel counterparts:
 
-| Approach | Main idea |
-| --- | --- |
-| Naive | Enumerate possible strings of length `N` and query the oracle. |
-| Improved | Extend candidates character by character, retaining only fragments accepted by the oracle. |
-| Turbo | Combine validated fragments into progressively larger blocks. |
-| Improved Turbo | Filter candidates using intermediate fragments before querying the oracle. |
-| Accelerated Turbo | Use a trie to store validated fragments and check substring membership. |
+1. **Naive exhaustive search** generates candidates of length `N` and asks the oracle whether each one is the hidden string. It provides a simple baseline, but its search space grows exponentially.
+2. **Improved incremental search** builds candidates one character at a time. At each stage, it keeps only prefixes accepted by the oracle, pruning branches that cannot lead to a solution.
+3. **Turbo** starts with valid one-character fragments and repeatedly concatenates pairs of valid fragments, doubling the candidate block length at each round.
+4. **Improved Turbo** adds an internal filter: before asking the oracle about a longer concatenation, it checks that its intermediate fragments are already known to be valid. This avoids some redundant oracle calls.
+5. **Accelerated Turbo** uses a trie to store validated fragments and check fragment membership during filtering. The report investigates whether this data structure improves on Improved Turbo in practice.
 
-The parallel variants use Fork/Join tasks and parallel collections. Their `umbral` parameter selects a sequential fallback for inputs at or below the threshold, avoiding parallel overhead on smaller inputs.
+The parallel variants distribute independent candidate checks or combinations across Fork/Join tasks and parallel collections. Their `umbral` parameter selects a sequential implementation for inputs at or below a threshold. This matters because creating and scheduling parallel work has a fixed cost that can outweigh its benefits for small inputs.
 
-## Benchmark results
+## What the project achieved
 
-The accompanying report compares the sequential and parallel approaches across different input sizes. It identifies **Improved Turbo** as the most consistent overall approach in its experiments. It also reports that the trie in Accelerated Turbo did not provide a clear improvement in that implementation. Benchmark measurements depend on hardware, JVM settings, and runtime load; CSV result files are included for reference.
+The work implements the reconstruction strategies, a test oracle with configurable query delay, a trie-based fragment index, parallel variants, and benchmark tooling that compares sequential and parallel execution. The report documents the algorithms' reasoning and measurements at multiple input sizes; CSV result files from benchmark runs are also included in the repository.
 
-## Requirements
+The experiments highlight two practical lessons:
 
-- JDK compatible with Scala 3
-- sbt **1.10.11** or compatible
+- Reducing oracle calls through progressively stronger filtering can matter more than adding a data structure by itself.
+- Parallel execution helps once there is enough independent work to offset scheduling overhead. The useful threshold depends on the algorithm and machine.
 
-The project uses Scala **3.3.6**, Scala Parallel Collections, ScalaMeter, and MUnit. The sbt configuration sets a 5 GB initial heap and an 8 GB maximum heap for Java processes.
+## Reported results
+
+The report identifies **Improved Turbo** as the strongest overall choice in its experiments: it combines low absolute runtime with comparatively stable parallel speedup. The report's summary gives maximum speedups of 10.14× for Naive, 8.31× for Improved, 4.20× for Turbo, 5.56× for Accelerated Turbo, and 5.94× for Improved Turbo. These are each algorithm's reported peak, not a same-input comparison; in particular, Naive was tested on a shorter input range than the Turbo approaches.
+
+For the report's `k = 10` comparison, the reported runtimes are:
+
+| Algorithm | Sequential (ms) | Parallel (ms) | Speedup (parallel comparison) |
+| --- | ---: | ---: | ---: |
+| Naive | 1,283,371 | 182,598 | 7.03× |
+| Improved | 2,566,823 | 308,742 | 8.31× |
+| Turbo | 520,498 | 321,903 | 1.62× |
+| Accelerated Turbo | 334,020 | 268,239 | 1.25× |
+| Improved Turbo | 128,028 | 26,944 | 4.75× |
+
+The last column is calculated from the sequential and parallel times in the report's `k = 10` table. At this input size, Improved Turbo has the shortest sequential and parallel runtimes. The trie-based Accelerated Turbo is slower than Improved Turbo in both columns, supporting the report's conclusion that the trie did not provide a clear benefit in this implementation.
+
+The report also describes scaling problems and irregular results for some methods and input sizes. Its measurements are specific to the tested machine, JVM and memory settings, thread count, garbage-collection behavior, and background system load. The reported peak speedups should therefore be read as experimental observations, not guaranteed performance on other systems.
 
 ## Build and run
 
-Compile from the repository root:
+Requirements:
+
+- JDK compatible with Scala 3
+- sbt 1.10.11 or a compatible version
+
+The project uses Scala 3.3.6, Scala Parallel Collections, ScalaMeter, and MUnit. Compile from the repository root:
 
 ```bash
 sbt compile
 ```
 
-Run the benchmark/test runner:
+Run the benchmark runner with:
 
 ```bash
 sbt "runMain TestRunner"
 ```
 
-`TestRunner` performs repeated oracle queries and benchmarks; runtime can be substantial. It writes a timestamped CSV results file in the working directory. Use a Scala script runner compatible with the `.sc` extension to run `src/test/scala/pruebas.sc` examples.
+`TestRunner` performs repeated oracle queries and benchmarks, so it can take a long time. It writes a timestamped CSV file in the working directory. The Scala script examples are in `src/test/scala/pruebas.sc` and require a Scala script runner compatible with `.sc` files.
 
 ## Project structure
 
@@ -64,13 +91,13 @@ src/
 │   ├── Oraculo/            # Alphabet and substring oracle
 │   ├── ReconstCadenas/     # Sequential reconstruction algorithms
 │   ├── ReconstCadenasPar/  # Parallel reconstruction algorithms
-│   ├── Benchmark/          # ScalaMeter helpers
+│   ├── Benchmark/          # ScalaMeter benchmark helpers
 │   ├── TestRunner/         # Benchmark runner and CSV output
 │   └── common/             # Fork/Join task scheduler
 └── test/scala/
-    └── pruebas.sc         # Script-based examples and experiments
+    └── pruebas.sc          # Script-based examples and experiments
 ```
 
-## Academic reference
+## Academic report
 
-The report **“El problema de reconstrucción de cadenas - Proyecto”** (Universidad del Valle, July 24, 2025) is included in the repository as [`El_problema_de_reconstrucción_de_cadenas.pdf`](./El_problema_de_reconstrucción_de_cadenas.pdf). It describes the problem, algorithmic approaches, experimental results, and conclusions about parallelization and trie performance.
+The report **“El problema de reconstrucción de cadenas - Proyecto”** (Universidad del Valle, July 24, 2025) is included as [`El_problema_de_reconstrucción_de_cadenas.pdf`](./El_problema_de_reconstrucción_de_cadenas.pdf). It contains the formal discussion, algorithm analyses, benchmark tables, and conclusions summarized above.
