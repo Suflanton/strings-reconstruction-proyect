@@ -43,23 +43,28 @@ The experiments highlight two practical lessons:
 - Reducing oracle calls through progressively stronger filtering can matter more than adding a data structure by itself.
 - Parallel execution helps once there is enough independent work to offset scheduling overhead. The useful threshold depends on the algorithm and machine.
 
-## Reported results
+## Benchmark results and how to read them
 
-The report identifies **Improved Turbo** as the strongest overall choice in its experiments: it combines low absolute runtime with comparatively stable parallel speedup. The report's summary gives maximum speedups of 10.14× for Naive, 8.31× for Improved, 4.20× for Turbo, 5.56× for Accelerated Turbo, and 5.94× for Improved Turbo. These are each algorithm's reported peak, not a same-input comparison; in particular, Naive was tested on a shorter input range than the Turbo approaches.
+The detailed result tables in the report use different meanings for `k`:
 
-For the report's `k = 10` comparison, the reported runtimes are:
+- For **Naive**, `k` is the string length `N`.
+- For **Improved** and the Turbo variants, the string length is `N = 2^k`.
 
-| Algorithm | Sequential (ms) | Parallel (ms) | Speedup (parallel comparison) |
-| --- | ---: | ---: | ---: |
-| Naive | 1,283,371 | 182,598 | 7.03× |
-| Improved | 2,566,823 | 308,742 | 8.31× |
-| Turbo | 520,498 | 321,903 | 1.62× |
-| Accelerated Turbo | 334,020 | 268,239 | 1.25× |
-| Improved Turbo | 128,028 | 26,944 | 4.75× |
+Therefore, rows with the same `k` across these algorithm tables do **not** represent the same input length. In particular, the final summary table's `k = 10` comparison places Naive at length 10 beside Improved/Turbo methods at length 1024. Their absolute runtimes should not be compared as if they solved an equal-sized instance. This explains why Naive appears faster sequentially than Improved in that summary.
 
-The last column is calculated from the sequential and parallel times in the report's `k = 10` table. At this input size, Improved Turbo has the shortest sequential and parallel runtimes. The trie-based Accelerated Turbo is slower than Improved Turbo in both columns, supporting the report's conclusion that the trie did not provide a clear benefit in this implementation.
+The table below transcribes the report's `k = 10` summary and makes the input length explicit. The speedup is calculated from each row's sequential and parallel time, so it compares the two implementations on that row's input.
 
-The report also describes scaling problems and irregular results for some methods and input sizes. Its measurements are specific to the tested machine, JVM and memory settings, thread count, garbage-collection behavior, and background system load. The reported peak speedups should therefore be read as experimental observations, not guaranteed performance on other systems.
+| Algorithm | `k` | Input length `N` | Sequential (ms) | Parallel (ms) | Speedup |
+| --- | ---: | ---: | ---: | ---: | ---: |
+| Naive | 10 | 10 | 1,283,371 | 182,598 | 7.03× |
+| Improved | 10 | 1,024 | 2,566,823 | 308,742 | 8.31× |
+| Turbo | 10 | 1,024 | 520,498 | 321,903 | 1.62× |
+| Accelerated Turbo | 10 | 1,024 | 334,020 | 268,239 | 1.25× |
+| Improved Turbo | 10 | 1,024 | 128,028 | 26,944 | 4.75× |
+
+For the comparable length-1024 entries, Improved Turbo has the shortest sequential and parallel runtimes in this summary. Its speedup for this specific input is **4.75×**. The report's detailed Improved Turbo table lists a higher speedup at `k = 9` (5.90×), while a later summary gives 5.94×; this README uses the consistent `k = 10` row above rather than presenting either figure as the speedup for that row. The trie-based Accelerated Turbo is slower than Improved Turbo at length 1024 in both sequential and parallel times, so the report found no clear practical benefit from the trie in this implementation.
+
+The report also describes irregular results and scaling limits for some methods and input sizes. Measurements depend on the tested machine, JVM and memory settings, thread count, garbage collection, and background system load; they are experimental observations, not performance guarantees.
 
 ## Build and run
 
