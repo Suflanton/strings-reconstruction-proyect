@@ -1,3 +1,4 @@
-[debug] not up to date. inChanged = true, force = false
-[debug] Updating ProjectRef(uri("file:/C:/Users/lialq/IdeaProjects/strings-reconstruction-proyect/"), "root")...
-[debug] Done updating ProjectRef(uri("file:/C:/Users/lialq/IdeaProjects/strings-reconstruction-proyect/"), "root")
+[warn] scala3-library_3-3.3.6-sources.jar no longer exists at C:\Users\lialq\AppData\Local\Coursier\Cache\v1\https\repo1.maven.org\maven2\org\scala-lang\scala3-library_3\3.3.6\scala3-library_3-3.3.6-sources.jar
+[debug] not up to date. inChanged = false, force = false
+[debug] Updating ProjectRef(uri("file:/C:/Users/lialq/IdeaProjects/strings-reconstruction-project/"), "root")...
+[debug] Done updating ProjectRef(uri("file:/C:/Users/lialq/IdeaProjects/strings-reconstruction-project/"), "root")

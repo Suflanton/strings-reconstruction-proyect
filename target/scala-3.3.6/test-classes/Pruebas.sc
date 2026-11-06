@@ -1,8 +1,11 @@
 import Oraculo._
+import ArbolSufijos._
 import ReconstCadenas._
+import ReconstCadenasPar._
 import scala.util.Random
-
+import Benchmark._
 val random = new Random()
+
 
 def secAlAzar(long:Int, s:Seq[Char]): Seq[Char] = {
   //Crea una secuencia de long caracteres del alfabeto,
@@ -13,19 +16,15 @@ def secAlAzar(long:Int, s:Seq[Char]): Seq[Char] = {
     secAlAzar(long,alfabeto(indiceAzar)+:s)
   }
 }
-val costoOraculo = 1
+val costoOraculo = 0
 
 val sec1=Seq('a', 'c', 'c', 'a')
 val sec2 = Seq('a', 'c', 'g', 'c', 'a')
-val sec3=secAlAzar(10,Seq())
+val sec3="attctcataaaatcac".toList
 
 val or_1=crearOraculo(costoOraculo)(sec1)
 val or_2=crearOraculo(costoOraculo)(sec2)
 val or_3=crearOraculo(costoOraculo)(sec3)
-
-reconstruirCadenaIngenuo(sec1.length, or_1)
-reconstruirCadenaIngenuo(sec2.length, or_2)
-reconstruirCadenaIngenuo(sec3.length, or_3)
 
 def secsCortasParaPruebas(n:Int):Seq[Seq[Char]] = for {
   i <- 1 to n
@@ -36,12 +35,38 @@ def secsLargasParaPruebas(n:Int):Seq[Seq[Char]] = for {
   i <- 1 to n
   s = secAlAzar(math.pow(2,i).toInt,Seq())
 } yield s
+val prueba= crearOraculo(0)(secAlAzar(4,Seq()))
+val pruebalarga = crearOraculo(0)(secAlAzar(math.pow(2,5).toInt,Seq()))
+reconstruirCadenaIngenuoPar(3)(4, prueba)
+reconstruirCadenaMejoradoPar(16)(math.pow(2,5).toInt, pruebalarga)
+reconstruirCadenaTurboPar(16)(math.pow(2,5).toInt, pruebalarga)
+reconstruirCadenaTurboMejoradaPar(16)(math.pow(2,5).toInt, pruebalarga)
+reconstruirCadenaTurboAceleradaPar(16)(math.pow(2,5).toInt, pruebalarga)
 
-def pruebasIngenuo (ss:Seq[Seq[Char]]) = for {
+/*
+def secsCortasParaPruebas(n:Int):Seq[Seq[Char]] = for {
+  i <- 1 to n
+  s = secAlAzar(i,Seq())
+} yield s
+
+def secsLargasParaPruebas(n:Int):Seq[Seq[Char]] = for {
+  i <- 1 to n
+  s = secAlAzar(math.pow(2,i).toInt,Seq())
+} yield s
+
+def pruebasIngenuo(ss:Seq[Seq[Char]]) = for {
   s <- ss
   o = crearOraculo(costoOraculo)(s)
-} yield (s,reconstruirCadenaIngenuo(s.length,o))
+} yield (s,reconstruirCadenaIngenuoConIterator(s.length,o))
 
+def pruebasIngenuoPar(ss:Seq[Seq[Char]]) = for {
+  s <- ss
+  o = crearOraculo(costoOraculo)(s)
+} yield (s,reconstruirCadenaIngenuoParConIterator(0)(s.length,o))
+
+*/
+//pruebasIngenuoPar(secsCortasParaPruebas(2))
+// benchmarkComparacionSecuencialParalelo(reconstruirCadenaIngenuoConIterator,reconstruirCadenaIngenuoParConIterator,Seq(secAlAzar(12,Seq())))
 /*
 
 def pruebasMejorado (ss:Seq[Seq[Char]]) = for {

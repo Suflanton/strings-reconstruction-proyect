@@ -1,0 +1,6 @@
+[debug] > Exec(:load ReconstCadenasPar.scala, None, None)
+[error] Expected symbol
+[error] Not a valid command: :
+[error] :load ReconstCadenasPar.scala
+[error]  ^
+[debug] > Exec(idea-shell, None, None)

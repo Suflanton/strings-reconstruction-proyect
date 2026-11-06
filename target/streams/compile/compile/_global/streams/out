@@ -1,0 +1,8 @@
+[0m[[0m[31merror[0m] [0m[0m[31m[31m-- [E007] Type Mismatch Error: C:\Users\lialq\IdeaProjects\strings-reconstruction-project\src\main\scala\ReconstCadenas\package.scala:45:29 [0m[0m[0m
+[0m[[0m[31merror[0m] [0m[0m[31m45 |[0m        c <- alfabeto.filter(o)[0m
+[0m[[0m[31merror[0m] [0m[0m[31m[31m   |[0m                             ^[0m[0m
+[0m[[0m[31merror[0m] [0m[0m[31m   |[0m                             Found:    (o : Oraculo.Oraculo)[0m
+[0m[[0m[31merror[0m] [0m[0m[31m   |[0m                             Required: Char => Boolean[0m
+[0m[[0m[31merror[0m] [0m[0m[31m   |[0m[0m
+[0m[[0m[31merror[0m] [0m[0m[31m   |[0m longer explanation available when compiling with `-explain`[0m
+[0m[[0m[31merror[0m] [0m[0mone error found[0m

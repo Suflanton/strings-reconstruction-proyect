@@ -1,0 +1,6 @@
+[debug] > Exec(:kind -v ReconstCadenasPar, None, None)
+[error] Expected symbol
+[error] Not a valid command: :
+[error] :kind -v ReconstCadenasPar
+[error]  ^
+[debug] > Exec(idea-shell, None, None)
